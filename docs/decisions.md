@@ -9,3 +9,7 @@
 - Crop & Replace results will be pooled across templates because each template has few samples.
 - SIDTD forged-region boxes will be built by combining field boxes from the genuine-document JSON with the field name in the forgery JSON.
 - FantasyID provides altered-field boxes (region_provenance = altered). It will be used for the cross-dataset test and the Turkish-template experiment; the Turkish split will be grouped by card.
+
+## 2026-10-28: Source-grouped split
+- SIDTD split rebuilt with `src/data/splits.py` (seed 42): 70/10/20 source documents per document type, stratified by document type. A source document and all forgeries derived from it are always in the same split.
+- 76 Crop & Replace forgeries take a field from a second source document that lies in another split. They are kept: this cannot inflate results (the pasted content comes from a genuine document and makes the forgery look more normal), and removing them would halve the Crop & Replace test set. Crop & Replace metrics will be reported with and without them as a sensitivity check.
