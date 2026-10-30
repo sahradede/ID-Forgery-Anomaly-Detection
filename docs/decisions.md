@@ -18,3 +18,9 @@
 - 30 of the 32 Crop & Replace forgeries in the test split had their second source in another split, so a with/without sensitivity check would leave almost no test samples.
 - The split now groups documents linked by a forgery (source and second source, union-find) and assigns whole groups to splits. No forgery has a source in another split; `check_split` enforces this.
 - `.gitignore` now ignores only the root `/data/` and `/results/` folders; the previous `data/` pattern also ignored `src/data/`.
+
+## 2026-10-28: FantasyID card-grouped folds
+- The file stem identifies a physical card: the same stem is used for the three capture devices and for every manipulation of that card.
+- The official FantasyID split leaks at card level: e.g. turkiye-008_03 is a genuine training card and also a digital_3 test attack.
+- `src/data/splits_fantasyid.py` assigns cards with genuine images to 5 folds per template (seed 42). Cards that only appear as attacks get fold -1 and are added to every test fold.
+- The Turkish-template experiment uses 5-fold cross-validation (25 genuine cards) and reports mean and standard deviation.
