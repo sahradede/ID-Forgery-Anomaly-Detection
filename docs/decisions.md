@@ -24,3 +24,8 @@
 - The official FantasyID split leaks at card level: e.g. turkiye-008_03 is a genuine training card and also a digital_3 test attack.
 - `src/data/splits_fantasyid.py` assigns cards with genuine images to 5 folds per template (seed 42). Cards that only appear as attacks get fold -1 and are added to every test fold.
 - The Turkish-template experiment uses 5-fold cross-validation (25 genuine cards) and reports mean and standard deviation.
+
+## 2026-10-28: JPEG-quality shortcut in SIDTD
+- Genuine SIDTD templates are stored at JPEG quality 92 (4:4:4 chroma), forged ones at quality 75 (4:2:0, the Pillow default). Image sizes are identical.
+- A supervised EfficientNet-B0 reached test AUROC 1.000 on unseen Crop & Replace forgeries when trained on inpainting only, which this compression difference can explain.
+- `src/data/normalize_jpeg.py` re-encodes every template at quality 75, 4:2:0 into `data/sidtd_q75`. Forged images barely change; genuine images get the same compression. All SIDTD experiments use this copy by default (`jpeg_q75=True`); `--raw-jpeg` reproduces the original setting.

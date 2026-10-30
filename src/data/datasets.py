@@ -16,6 +16,7 @@ from torchvision.transforms import v2
 
 ROOT = Path(__file__).resolve().parents[2]
 SIDTD_DIR = ROOT / "data" / "sidtd"
+SIDTD_Q75_DIR = ROOT / "data" / "sidtd_q75"  # all images re-encoded at JPEG quality 75, 4:2:0
 FANTASY_DIR = ROOT / "data" / "fantasyid" / "FantasyID"
 SPLITS_DIR = ROOT / "splits"
 
@@ -89,8 +90,11 @@ def fantasyid_rows(template: str | None = None, folds: Sequence[int] | None = No
     return df
 
 
-def sidtd_dataset(split: str, transform: Callable | None = None, **filters) -> IDDocumentDataset:
-    return IDDocumentDataset(sidtd_rows(split, **filters), SIDTD_DIR, transform)
+def sidtd_dataset(split: str, transform: Callable | None = None, jpeg_q75: bool = True,
+                  **filters) -> IDDocumentDataset:
+    """jpeg_q75=True reads the re-encoded copy that removes the JPEG-quality shortcut."""
+    root = SIDTD_Q75_DIR if jpeg_q75 else SIDTD_DIR
+    return IDDocumentDataset(sidtd_rows(split, **filters), root, transform)
 
 
 def fantasyid_dataset(transform: Callable | None = None, **filters) -> IDDocumentDataset:

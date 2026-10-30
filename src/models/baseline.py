@@ -61,14 +61,17 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--raw-jpeg", action="store_true",
+                        help="use the original files, which contain the JPEG-quality shortcut")
     args = parser.parse_args()
+    q75 = not args.raw_jpeg
 
     torch.manual_seed(args.seed)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     forgeries = FORGERY_SETS[args.train_forgeries]
 
-    train_ds = sidtd_dataset("train", transform=train_transform(), forgery_types=forgeries)
-    val_ds = sidtd_dataset("val", forgery_types=forgeries)
+    train_ds = sidtd_dataset("train", transform=train_transform(), forgery_types=forgeries, jpeg_q75=q75)
+    val_ds = sidtd_dataset("val", forgery_types=forgeries, jpeg_q75=q75)
     loader_args = {"batch_size": args.batch_size, "num_workers": args.workers}
     train_loader = DataLoader(train_ds, shuffle=True, **loader_args)
     val_loader = DataLoader(val_ds, **loader_args)
@@ -78,7 +81,7 @@ def main() -> None:
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     criterion = nn.BCEWithLogitsLoss()
 
-    out_dir = ROOT / "results" / "baseline" / args.train_forgeries
+    out_dir = ROOT / "results" / "baseline" / f"{args.train_forgeries}_{'q75' if q75 else 'raw'}"
     out_dir.mkdir(parents=True, exist_ok=True)
     best_val = -1.0
 
@@ -105,10 +108,10 @@ def main() -> None:
     y_val, s_val = predict(model, val_loader, device)
     threshold = threshold_for_bpcer(s_val[y_val == 0], bpcer=0.05)
 
-    results = {"train_forgeries": args.train_forgeries, "best_val_auroc": best_val,
+    results = {"train_forgeries": args.train_forgeries, "jpeg": "q75" if q75 else "raw", "best_val_auroc": best_val,
                "threshold": threshold, "test": {}}
     for forgery_type in TEST_TYPES:
-        test_ds = sidtd_dataset("test", forgery_types=[forgery_type])
+        test_ds = sidtd_dataset("test", forgery_types=[forgery_type], jpeg_q75=q75)
         y, s = predict(model, DataLoader(test_ds, **loader_args), device)
         results["test"][forgery_type] = {
             "auroc": auroc(y, s), **pad_metrics(y, s, threshold),
