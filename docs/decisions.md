@@ -39,3 +39,8 @@
 - PatchCore is implemented in `src/models/patchcore.py` following Roth et al. (2022): WideResNet-50 layer2 + layer3 features with 3x3 averaging, greedy coreset (10%), nearest-neighbour distance, image score = maximum patch score. These match the anomalib 2.7 defaults.
 - The anomalib Folder/Engine pipeline is not used: it reads folders while our splits are CSV files, and its default validation split is taken from the test set (`val_split_mode=FROM_TEST`). The in-house version uses the same splits, transforms and metrics as the supervised baseline.
 - One memory bank per document type. Scores are z-normalized with the validation genuine documents of the same type and pooled across types, because each type has only about three Crop & Replace test forgeries.
+
+## 2026-10-30: Field-aware PatchCore
+- Plain PatchCore on esp_id: test AUROC 0.54. Diagnostics: the anomaly-map peak lies inside the forged field for only 7% of forgeries; peaks sit on the signature and the face, which vary between genuine documents.
+- Diagnostic only (normalized with test genuine documents, forged field known): comparing each forged field with the same field of genuine documents gives AUROC 0.97, against 0.56 for the plain image score and 0.64 with face, photo and signature masked.
+- New model `src/models/field_patchcore.py`: one memory bank of all genuine training patches per document type, fixed field boxes (union of training annotations), per-field z-normalization with leave-one-document-out training statistics, document score = maximum field z-score. The arg-max field is the predicted forged field (field hit rate).
