@@ -33,7 +33,7 @@ def interval(values: np.ndarray) -> list[float]:
 
 
 def paired_bootstrap(a: pd.DataFrame, b: pd.DataFrame, n_boot: int = 2000, seed: int = 0) -> dict:
-    joined = a.join(b, lsuffix="_a", rsuffix="_b", how="inner")
+    joined = a.merge(b, left_index=True, right_index=True, suffixes=("_a", "_b"))
     assert (joined["label_a"] == joined["label_b"]).all(), "labels differ between the two score files"
     labels = joined["label_a"].to_numpy()
     sa, sb = joined["score_a"].to_numpy(), joined["score_b"].to_numpy()
