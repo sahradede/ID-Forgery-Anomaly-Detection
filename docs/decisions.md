@@ -44,3 +44,8 @@
 - Plain PatchCore on esp_id: test AUROC 0.54. Diagnostics: the anomaly-map peak lies inside the forged field for only 7% of forgeries; peaks sit on the signature and the face, which vary between genuine documents.
 - Diagnostic only (normalized with test genuine documents, forged field known): comparing each forged field with the same field of genuine documents gives AUROC 0.97, against 0.56 for the plain image score and 0.64 with face, photo and signature masked.
 - New model `src/models/field_patchcore.py`: one memory bank of all genuine training patches per document type, fixed field boxes (union of training annotations), per-field z-normalization with leave-one-document-out training statistics, document score = maximum field z-score. The arg-max field is the predicted forged field (field hit rate).
+
+## 2026-10-30: Field-aware PatchCore uses all fields
+- All templates, all fields: AUROC 0.853 (inpainting) and 0.743 (Crop & Replace). Excluding face, photo and signature: 0.858 and 0.728. The difference is within noise.
+- All fields are kept: simpler, and excluding fields would miss forgeries of those fields. The per-field z-normalization already compensates for fields that vary between genuine documents.
+- Week 3 gate passed: the one-class model is clearly above chance and, on unseen Crop & Replace forgeries, above the supervised baseline (0.613 when trained on inpainting only). A paired bootstrap tests whether the difference is significant.

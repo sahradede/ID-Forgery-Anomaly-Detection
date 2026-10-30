@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | 1 | Environment, SIDTD and FantasyID download, data exploration | Both datasets readable; data findings logged | Done |
 | 2 | Grouped splits (SIDTD by linked source, FantasyID by card), shared dataset classes, metrics, supervised baseline, JPEG shortcut removed | Reference baseline (E1, E2) | Done |
-| 3 | PatchCore and PaDiM, one memory bank per document type | **Gate:** one-class model clearly above chance on pooled SIDTD; compared with baseline Crop & Replace AUROC (0.61-0.70) | In progress |
+| 3 | PatchCore and PaDiM, one memory bank per document type | **Gate:** one-class model clearly above chance on pooled SIDTD; compared with baseline Crop & Replace AUROC (0.61-0.70) | Done |
 | 4 | Product v0: FastAPI `/predict` and web UI with the best available model | **Gate:** end-to-end demo works | Planned |
 | 5 | Unseen-attack experiments (E1-E3) with bootstrap confidence intervals and several seeds | Comparison table | Planned |
 | 6 | Forged-region boxes for SIDTD from annotations; localization metric for heatmaps | **Gate:** is the one-class model adequate? If not, focus on the hybrid model | Planned |

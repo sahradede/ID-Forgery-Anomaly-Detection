@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -120,17 +121,22 @@ def main() -> None:
     model.load_state_dict(torch.load(out_dir / "best.pt", map_location=device))
     y_val, s_val = predict(model, val_loader, device)
     threshold = threshold_for_bpcer(s_val[y_val == 0], bpcer=0.05)
+    best_val = auroc(y_val, s_val)  # also correct when re-evaluating with --epochs 0
+    score_parts = []
 
     results = {"train_forgeries": args.train_forgeries, "jpeg": "q75" if q75 else "raw", "best_val_auroc": best_val,
                "threshold": threshold, "test": {}}
     for forgery_type in TEST_TYPES:
         test_ds = sidtd_dataset("test", forgery_types=[forgery_type], jpeg_q75=q75)
         y, s = predict(model, DataLoader(test_ds, **loader_args), device)
+        score_parts.append(pd.DataFrame({"image_path": test_ds.rows["image_path"].to_numpy(), "label": y,
+                                         "test_set": forgery_type, "score": s}))
         results["test"][forgery_type] = {
             "auroc": auroc(y, s), **pad_metrics(y, s, threshold),
             "n_genuine": int((y == 0).sum()), "n_forged": int((y == 1).sum()),
         }
 
+    pd.concat(score_parts, ignore_index=True).to_csv(out_dir / "test_scores.csv", index=False)
     (out_dir / "metrics.json").write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
 
