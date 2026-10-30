@@ -63,6 +63,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--raw-jpeg", action="store_true",
                         help="use the original files, which contain the JPEG-quality shortcut")
+    parser.add_argument("--resume", action="store_true",
+                        help="continue from last.pt in the experiment folder")
     args = parser.parse_args()
     q75 = not args.raw_jpeg
 
@@ -84,8 +86,17 @@ def main() -> None:
     out_dir = ROOT / "results" / "baseline" / f"{args.train_forgeries}_{'q75' if q75 else 'raw'}"
     out_dir.mkdir(parents=True, exist_ok=True)
     best_val = -1.0
+    start_epoch = 1
+    last_path = out_dir / "last.pt"
+    if args.resume and last_path.exists():
+        checkpoint = torch.load(last_path, map_location=device)
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        best_val = checkpoint["best_val"]
+        start_epoch = checkpoint["epoch"] + 1
+        print(f"Resumed after epoch {checkpoint['epoch']} (best val AUROC {best_val:.4f})")
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch, args.epochs + 1):
         model.train()
         total_loss = 0.0
         for batch in train_loader:
@@ -103,6 +114,8 @@ def main() -> None:
         if val_auroc > best_val:
             best_val = val_auroc
             torch.save(model.state_dict(), out_dir / "best.pt")
+        torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(),
+                    "epoch": epoch, "best_val": best_val}, last_path)
 
     model.load_state_dict(torch.load(out_dir / "best.pt", map_location=device))
     y_val, s_val = predict(model, val_loader, device)
